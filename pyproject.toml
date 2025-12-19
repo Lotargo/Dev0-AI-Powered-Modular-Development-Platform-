@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "dev0"
+version = "0.1.0"
+description = "Dev0: A platform for building applications using modular components."
+authors = ["Jules"]
+license = "AGPL-3.0-or-later"
+readme = "README.md"
+packages = [{include = "project"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.121.0"
+pydantic = "^2.12.3"
+uvicorn = {extras = ["standard"], version = "^0.38.0"}
+asteval = "^1.0.6"
+python-dotenv = "^1.2.1"
+datamodel-code-generator = "^0.35.0"
+pydantic-to-typescript = "^2.0.0"
+google-generativeai = "^0.8.5"
+rapidfuzz = "^3.9.3"
+duckduckgo-search = "^8.1.1"
+chromadb = "^0.5.0"
+sqlalchemy = "^2.0.30"
+sentence-transformers = "^2.7.0"
+pyyaml = "^6.0.1"
+qrcode = {extras = ["pil"], version = "^8.2"}
+pillow = "^12.0.0"
+requests = "^2.32.5"
+toml = "^0.10.2"
+aio-pika = "^9.5.7"
+redis = "^5.0.7"
+fakeredis = "^2.23.0"
+astor = "^0.8.1"
+typeguard = "^4.4.4"
+groq = "^0.34.1"
+cohere = "^5.20.0"
+mistralai = "^1.9.11"
+httpx = "^0.28.1"
+qdrant-client = "^1.16.0"
+mcp = "^1.22.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.2"
+httpx = "^0.28.1"
+pytest-asyncio = "^0.23.7"
+playwright = "^1.56.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = "."
+markers = [
+    "integration: marks tests as integration tests (slow)",
+]

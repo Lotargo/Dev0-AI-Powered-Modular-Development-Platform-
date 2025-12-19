@@ -1,0 +1,209 @@
+[
+    {
+        "name": "vector_db",
+        "type": "atomic",
+        "filepath": "/app/project/modules/memory/vector_db.py",
+        "import_path": "project.modules.memory.vector_db",
+        "description": "Performs operations on the Vector Database (Qdrant).",
+        "schemas": {
+            "Input": {
+                "class_name": "VectorDBInput",
+                "fields": {
+                    "action": "str",
+                    "collection_name": "str",
+                    "documents": "Optional[List[str]]",
+                    "metadatas": "Optional[List[Dict[str, Any]]]",
+                    "ids": "Optional[List[str]]",
+                    "query_text": "Optional[str]",
+                    "n_results": "int"
+                }
+            },
+            "Output": {
+                "class_name": "VectorDBOutput",
+                "fields": {
+                    "status": "str",
+                    "results": "Optional[List[str]]",
+                    "metadatas": "Optional[List[Dict[str, Any]]]"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic"
+        }
+    },
+    {
+        "name": "python_executor",
+        "type": "atomic",
+        "filepath": "/app/project/modules/tools/python_executor.py",
+        "import_path": "project.modules.tools.python_executor",
+        "description": "Executes a shell command in a subprocess.\nThis provides a powerful way to interact with the underlying system.",
+        "schemas": {
+            "Input": {
+                "class_name": "PythonExecutorInput",
+                "fields": {
+                    "command": "str"
+                }
+            },
+            "Output": {
+                "class_name": "PythonExecutorOutput",
+                "fields": {
+                    "stdout": "str",
+                    "stderr": "str",
+                    "exit_code": "int"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic"
+        }
+    },
+    {
+        "name": "dependency_manager",
+        "type": "atomic",
+        "filepath": "/app/project/modules/tools/dependency_manager.py",
+        "import_path": "project.modules.tools.dependency_manager",
+        "description": "Adds a dependency to the project using 'poetry add'.",
+        "schemas": {
+            "Input": {
+                "class_name": "AddDependencyInput",
+                "fields": {
+                    "package_name": "str",
+                    "is_dev": "bool"
+                }
+            },
+            "Output": {
+                "class_name": "AddDependencyOutput",
+                "fields": {
+                    "success": "bool",
+                    "message": "str"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic"
+        }
+    },
+    {
+        "name": "long_sleep",
+        "type": "atomic",
+        "filepath": "/app/project/modules/tools/long_sleep.py",
+        "import_path": "project.modules.tools.long_sleep",
+        "description": "Simulates a blocking I/O operation by sleeping for a specified duration\nand then returns a success message.",
+        "schemas": {
+            "Input": {
+                "class_name": "Input",
+                "fields": {
+                    "duration": "float"
+                }
+            },
+            "Output": {
+                "class_name": "Output",
+                "fields": {
+                    "message": "str"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic",
+            "is_concurrent": true
+        }
+    },
+    {
+        "name": "create_directory",
+        "type": "atomic",
+        "filepath": "/app/project/modules/filesystem/create_directory.py",
+        "import_path": "project.modules.filesystem.create_directory",
+        "description": "Creates a new directory at the specified path.\nArgs:\n    input_data: A CreateDirectoryInput object containing the path.\nReturns:\n    A CreateDirectoryOutput object with a message indicating the result.",
+        "schemas": {
+            "Input": {
+                "class_name": "CreateDirectoryInput",
+                "fields": {
+                    "path": "str"
+                }
+            },
+            "Output": {
+                "class_name": "CreateDirectoryOutput",
+                "fields": {
+                    "message": "str"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic"
+        }
+    },
+    {
+        "name": "create_file",
+        "type": "atomic",
+        "filepath": "/app/project/modules/filesystem/create_file.py",
+        "import_path": "project.modules.filesystem.create_file",
+        "description": "Creates a new file with content at the specified path.\nArgs:\n    input_data: A CreateFileInput object containing the path and content.\nReturns:\n    A CreateFileOutput object with a message indicating the result.",
+        "schemas": {
+            "Input": {
+                "class_name": "CreateFileInput",
+                "fields": {
+                    "path": "str",
+                    "content": "str"
+                }
+            },
+            "Output": {
+                "class_name": "CreateFileOutput",
+                "fields": {
+                    "message": "str"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic"
+        }
+    },
+    {
+        "name": "delete_file",
+        "type": "atomic",
+        "filepath": "/app/project/modules/filesystem/delete_file.py",
+        "import_path": "project.modules.filesystem.delete_file",
+        "description": "Deletes a file at the specified path.",
+        "schemas": {
+            "Input": {
+                "class_name": "DeleteFileInput",
+                "fields": {
+                    "path": "str"
+                }
+            },
+            "Output": {
+                "class_name": "DeleteFileOutput",
+                "fields": {
+                    "status": "str",
+                    "message": "str"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic"
+        }
+    },
+    {
+        "name": "tavily_search",
+        "type": "atomic",
+        "filepath": "/app/project/modules/search/tavily_search.py",
+        "import_path": "project.modules.search.tavily_search",
+        "description": "Performs a web search using the Tavily API to retrieve technical information.",
+        "schemas": {
+            "Input": {
+                "class_name": "TavilySearchInput",
+                "fields": {
+                    "query": "str"
+                }
+            },
+            "Output": {
+                "class_name": "TavilySearchOutput",
+                "fields": {
+                    "results": "str"
+                }
+            }
+        },
+        "metadata": {
+            "type": "atomic"
+        }
+    }
+]

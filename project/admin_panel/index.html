@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dev0 Glass Box</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #e2e8f0; font-family: monospace; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- Trace Tree Component ---
+
+        function TraceNode({ node, depth = 0 }) {
+            const [expanded, setExpanded] = useState(true);
+
+            const hasChildren = node.children && node.children.length > 0;
+            const isError = node.error;
+            const duration = node.duration ? `${(node.duration).toFixed(3)}s` : "Running...";
+
+            return (
+                <div className="ml-4 border-l border-slate-700 pl-2">
+                    <div className="flex items-center gap-2 py-1 hover:bg-white/5 rounded cursor-pointer" onClick={() => setExpanded(!expanded)}>
+                        <span className="text-slate-500 text-xs">{hasChildren ? (expanded ? '▼' : '▶') : '•'}</span>
+                        <span className={`font-bold ${isError ? 'text-red-400' : 'text-blue-400'}`}>{node.source}</span>
+                        <span className="text-slate-500 text-xs">({duration})</span>
+                    </div>
+
+                    {/* Render Thoughts attached to this Span */}
+                    {node.thoughts && node.thoughts.map((t, i) => (
+                        <div key={i} className="ml-6 text-yellow-200/80 text-xs italic p-1 border-l-2 border-yellow-600/30 mb-1">
+                            "{t.content}"
+                        </div>
+                    ))}
+
+                    {expanded && hasChildren && (
+                        <div className="mt-1">
+                            {node.children.map(child => (
+                                <TraceNode key={child.span_id} node={child} depth={depth + 1} />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function buildTraceTree(events) {
+            const spans = {};
+            const roots = [];
+
+            // 1. Index all spans by ID
+            events.forEach(e => {
+                if (!e.span_id) return;
+                if (!spans[e.span_id]) {
+                    spans[e.span_id] = {
+                        span_id: e.span_id,
+                        children: [],
+                        thoughts: [],
+                        start_time: null,
+                        end_time: null,
+                        duration: null
+                    };
+                }
+                const span = spans[e.span_id];
+
+                if (e.type === "EXECUTION_START") {
+                    span.source = e.source;
+                    span.start_time = new Date(e.timestamp);
+                    span.parent_span_id = e.parent_span_id;
+                } else if (e.type === "EXECUTION_COMPLETE") {
+                    span.end_time = new Date(e.timestamp);
+                    span.duration = e.data.duration;
+                } else if (e.type === "EXECUTION_ERROR") {
+                    span.error = e.data.error;
+                    span.duration = e.data.duration;
+                } else if (e.type === "AGENT_THOUGHT") {
+                    span.thoughts.push(e.data);
+                }
+            });
+
+            // 2. Build Hierarchy
+            Object.values(spans).forEach(span => {
+                if (span.parent_span_id && spans[span.parent_span_id]) {
+                    spans[span.parent_span_id].children.push(span);
+                } else if (span.start_time) {
+                    // Only add to roots if it's a valid start event (avoids orphans from partial streams)
+                    roots.push(span);
+                }
+            });
+
+            // Sort by time
+            roots.sort((a, b) => a.start_time - b.start_time);
+            return roots;
+        }
+
+        // --- App ---
+
+        function App() {
+            const [events, setEvents] = useState([]);
+            const [status, setStatus] = useState("Disconnected");
+            const wsRef = useRef(null);
+            const scrollRef = useRef(null);
+
+            useEffect(() => {
+                const connect = () => {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ws/events`;
+                    console.log("Connecting to " + wsUrl);
+                    const ws = new WebSocket(wsUrl);
+
+                    ws.onopen = () => setStatus("Connected");
+                    ws.onclose = () => {
+                        setStatus("Disconnected");
+                        setTimeout(connect, 3000);
+                    };
+                    ws.onmessage = (msg) => {
+                        try {
+                            const event = JSON.parse(msg.data);
+                            setEvents(prev => [...prev, event]);
+                        } catch (e) {
+                            console.error("Parse error", e);
+                        }
+                    };
+                    wsRef.current = ws;
+                };
+                connect();
+                return () => wsRef.current?.close();
+            }, []);
+
+            // Auto-scroll Log
+            useEffect(() => {
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                }
+            }, [events]);
+
+            const treeRoots = useMemo(() => buildTraceTree(events), [events]);
+
+            return (
+                <div className="h-screen flex flex-col p-4 max-w-screen-2xl mx-auto">
+                    <header className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                        <h1 className="text-xl font-bold text-green-400">Dev0 <span className="text-slate-400">Glass Box</span></h1>
+                        <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${status === "Connected" ? "bg-green-500" : "bg-red-500"}`}></span>
+                            <span className="text-xs text-slate-500">{status}</span>
+                        </div>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 overflow-hidden">
+
+                        {/* Left: Trace Tree */}
+                        <div className="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+                            <div className="p-2 bg-slate-800 text-xs font-bold uppercase tracking-wider text-slate-400">Trace Tree</div>
+                            <div className="flex-1 overflow-y-auto p-4">
+                                {treeRoots.length === 0 && <div className="text-slate-600 italic text-center mt-10">No active traces</div>}
+                                {treeRoots.map(root => (
+                                    <TraceNode key={root.span_id} node={root} />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Right: Raw Event Log */}
+                        <div className="flex flex-col bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+                            <div className="p-2 bg-slate-800 text-xs font-bold uppercase tracking-wider text-slate-400">Live Log</div>
+                            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-1 font-mono text-xs">
+                                {events.map((evt, i) => (
+                                    <div key={i} className="flex gap-2 hover:bg-white/5 p-0.5 rounded">
+                                        <span className="text-slate-600 shrink-0">{new Date(evt.timestamp).toLocaleTimeString()}</span>
+                                        <span className={`shrink-0 w-32 truncate ${evt.type.includes("ERROR") ? 'text-red-400' : 'text-slate-400'}`}>
+                                            {evt.type.replace("EXECUTION_", "")}
+                                        </span>
+                                        <span className="text-slate-300 truncate">{evt.source}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
